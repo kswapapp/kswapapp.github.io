@@ -23,8 +23,8 @@ const ssc = new SSC("https://engine.rishipanthee.com/");
 var DECIMAL = 1000;
 DECIMAL = parseInt(DECIMAL) || 0.0;
 
-var BASE_FEE = 0.000;
-var DIFF_COEFFICIENT = 0.003;
+var BASE_FEE = 0.001;
+var DIFF_COEFFICIENT = 0.0035;
 var HIVEPOOL = 10000;
 var SHIVEPOOL = 10000;
 const BRIDGE_USER = "kswap";
