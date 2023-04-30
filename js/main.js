@@ -294,9 +294,9 @@ $(window).bind("load", function () {
     $("#input, #output").change(() => { updateSwap(); setOutPut(); });
 
     $("#reverse").click(function () {
-        var input = $("#input").val();
-        $("#input").val($("#output").val());
-        $("#output").val(input);
+        //var input = $("#input").val();
+        //$("#input").val($("#output").val());
+        //$("#output").val(input);
         updateSwap();
     });
 
@@ -688,16 +688,16 @@ $(window).bind("load", function () {
             historyReader();
             console.log("");
             console.warn("Refresh ended");
-            // setting timeout for 30 secs
-            setTimeout(intervalBalances, 30000);
+            // setting timeout for 60 secs
+            setTimeout(intervalBalances, 60000);
         }
         catch (error) {
             console.log("Error @ Refreshing : ", error);
-            setTimeout(intervalBalances, 30000);
+            setTimeout(intervalBalances, 60000);
         }
     };
 
-    setTimeout(intervalBalances, 30000);
+    setTimeout(intervalBalances, 60000);
 
     async function setSwapAmounts() {
         var TIMEOUT = 1000 * 10;
@@ -736,6 +736,7 @@ $(window).bind("load", function () {
             const radioGroup = document.getElementsByName('my-radio-group');
             const slipageQty = document.getElementById('slipageqty');
             const inputElement = document.getElementById("input");
+            const outputElement = document.getElementById("output");
             const feetickerElement = document.getElementById("minreceivesymbol");
             const reverseButton = document.getElementById('reverse');
     
@@ -745,8 +746,9 @@ $(window).bind("load", function () {
             // Function to update the input element and recalculate output and slippage quantities
             async function updateInputs(selectedValue) {
                 inputElement.value = selectedValue;
-                feetickerElement.textContent = selectedValue === "HIVE" ? "SWAP.HIVE" : "HIVE";
+                feetickerElement.textContent = selectedValue === "HIVE" ? "SWAP.HIVE" : "HIVE";                
                 await updateSlipageQty();
+                await updateOptionValues();                
             }
     
             hiveSpan.addEventListener('click', async() => {                
@@ -776,6 +778,15 @@ $(window).bind("load", function () {
             reverseButton.addEventListener('click', async() => {
                 await updateInputs(inputElement.value === "HIVE" ? "SWAP.HIVE" : "HIVE");
             });
+
+            async function updateOptionValues() {
+                // update the output select element based on the input select value                
+                if (inputElement.value === 'HIVE') {
+                    outputElement.value = 'SWAP.HIVE';
+                } else if (inputElement.value === 'SWAP.HIVE') {
+                    outputElement.value = 'HIVE';
+                }
+            };
     
             async function updateSlipageQty() {
                 const inputVal = parseFloat(input.value) || 0;
@@ -790,7 +801,7 @@ $(window).bind("load", function () {
                     calcOut *= (1 - (selectedRadioVal / 100));
                 }                           
                 slipageQty.textContent = Math.floor((calcOut) * DECIMAL) / DECIMAL;
-            }            
+            }; 
         }
         catch (error) {
             console.log("changeMinOutput : ", error);
