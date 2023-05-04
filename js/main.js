@@ -763,6 +763,11 @@ $(window).bind("load", function () {
             input.addEventListener('input', async() => {
                 await updateSlipageQty();
             });
+
+            // Add event listener to the output element to update slipageQty
+            output.addEventListener("change", async () => {
+                slipageQty.textContent = Math.floor((output.value) * DECIMAL) / DECIMAL;
+            });
     
             radioGroup.forEach(radio => {
                 radio.addEventListener('change', async() => {
@@ -771,9 +776,9 @@ $(window).bind("load", function () {
             });
     
             // Add event listener to the input element to update feetickerElement
-            inputElement.addEventListener("change", async () => {
+            inputElement.addEventListener("change", async () => {                
                 await updateInputs(inputElement.value);
-            });
+            });            
     
             reverseButton.addEventListener('click', async() => {
                 await updateInputs(inputElement.value === "HIVE" ? "SWAP.HIVE" : "HIVE");
