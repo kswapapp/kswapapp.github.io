@@ -238,7 +238,6 @@ $(window).bind("load", function () {
             await initializeEngineAPI();
             refresh();
             getExtBridge();
-            changeMinOutput();
         } 
         catch (error) 
         {
@@ -1173,7 +1172,9 @@ $(window).bind("load", function () {
         {
             console.log("changeMinOutput : ", error);
         }
-    };    
+    }; 
+    
+    changeMinOutput();
 
     async function calcOutput(inputVal, selectedSymbol)
     {
