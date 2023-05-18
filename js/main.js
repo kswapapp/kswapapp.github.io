@@ -6,6 +6,7 @@ var DIFF_COEFFICIENT = 0.0035;
 var HIVEPOOL = 10000;
 var SHIVEPOOL = 10000;
 const BRIDGE_USER = "kswap";
+let ssc;
 
 $(window).bind("load", function () {
 
@@ -32,8 +33,6 @@ $(window).bind("load", function () {
 		"https://api.primersion.com",
 		"https://herpc.actifit.io"
     ];
-
-    let ssc;
     
     async function checkHiveNodeStatus(nodeUrl, statusElement) {
         try 
@@ -238,6 +237,8 @@ $(window).bind("load", function () {
             await initializeHiveAPI();
             await initializeEngineAPI();
             refresh();
+            getExtBridge();
+            changeMinOutput();
         } 
         catch (error) 
         {
@@ -255,7 +256,7 @@ $(window).bind("load", function () {
 
     function dec(val) {
         return Math.floor(val * 1000) / 1000;
-    }
+    };
 
     $(document).ready(function() {
         // Get a reference to the button and the popup container
@@ -367,63 +368,88 @@ $(window).bind("load", function () {
     });
 
     async function getBalances(account) {
-        const res = await hive.api.getAccountsAsync([account]);
-        if (res.length > 0) {
-            const res2 = await ssc.find("tokens", "balances", { account, symbol: { "$in": ["SWAP.HIVE"] } }, 1000, 0, []);
-            var swaphive = res2.find(el => el.symbol === "SWAP.HIVE");
-            return {
-                HIVE: dec(parseFloat(res[0].balance.split(" ")[0])),
-                "SWAP.HIVE": dec(parseFloat((swaphive) ? swaphive.balance : 0))
-            }
+        try
+        {
+            const res = await hive.api.getAccountsAsync([account]);
+            if (res.length > 0) 
+            {
+                const res2 = await ssc.find("tokens", "balances", { account, symbol: { "$in": ["SWAP.HIVE"] } }, 1000, 0, []);
+                var swaphive = res2.find(el => el.symbol === "SWAP.HIVE");
+                return {
+                    HIVE: dec(parseFloat(res[0].balance.split(" ")[0])),
+                    "SWAP.HIVE": dec(parseFloat((swaphive) ? swaphive.balance : 0))
+                }
 
-        } else return { HIVE: 0, "SWAP.HIVE": 0 };
-    }
+            } 
+            else 
+            {
+                return { HIVE: 0, "SWAP.HIVE": 0 };
+            }   
+        }
+        catch (error)
+        {
+            console.log("Error at getBalances() : ", error);
+        }
+    };
 
     async function getExtBridge () {
-        const res = await hive.api.getAccountsAsync(['uswap']);
-        var hiveLiq = res[0].balance.split(" ")[0];
-        hiveLiq = Math.floor(hiveLiq * DECIMAL) / DECIMAL;
+        try
+        {
+            const res = await hive.api.getAccountsAsync(['uswap']);
+            var hiveLiq = res[0].balance.split(" ")[0];
+            hiveLiq = Math.floor(hiveLiq * DECIMAL) / DECIMAL;
 
-        const res2 = await ssc.findOne("tokens", "balances", { account: 'uswap', symbol: 'SWAP.HIVE' });
-        var swaphiveLiq = parseFloat(res2.balance) || 0.0;
-        swaphiveLiq = Math.floor(swaphiveLiq * DECIMAL) / DECIMAL;
+            const res2 = await ssc.findOne("tokens", "balances", { account: 'uswap', symbol: 'SWAP.HIVE' });
+            var swaphiveLiq = parseFloat(res2.balance) || 0.0;
+            swaphiveLiq = Math.floor(swaphiveLiq * DECIMAL) / DECIMAL;
 
-        $("#hive_liq").text(hiveLiq);
+            $("#hive_liq").text(hiveLiq);
 
-        $("#swap_liq").text(swaphiveLiq);
+            $("#swap_liq").text(swaphiveLiq);
 
-        $("#bridge").removeClass("d-none");
-
-    }   
-
-    getExtBridge();
+            $("#bridge").removeClass("d-none");
+        }
+        catch (error)
+        {
+            onsole.log("Error at getExtBridge() : ", error);
+        }
+    };   
 
     async function refresh() {
-        updateMin();
-        bridgebal = await getBalances("kswap");
-        $("#hiveliquidity").text(bridgebal.HIVE.toFixed(3));
-        $("#swaphiveliquidity").text(bridgebal["SWAP.HIVE"].toFixed(3));
-        console.log("");
-        console.log(
-            'Update Hive Liquidity: ' + bridgebal.HIVE.toFixed(3) + ' HIVE',
-        );
+        try
+        {
+            updateMin();
+            bridgebal = await getBalances("kswap");
+            $("#hiveliquidity").text(bridgebal.HIVE.toFixed(3));
+            $("#swaphiveliquidity").text(bridgebal["SWAP.HIVE"].toFixed(3));
+            console.log("");
+            console.log(
+                'Update Hive Liquidity: ' + bridgebal.HIVE.toFixed(3) + ' HIVE',
+            );
 
-        console.log(
-            'Update SWAP.HIVE Liquidity: ' + bridgebal["SWAP.HIVE"].toFixed(3) + ' SWAP.HIVE',
-        );        
+            console.log(
+                'Update SWAP.HIVE Liquidity: ' + bridgebal["SWAP.HIVE"].toFixed(3) + ' SWAP.HIVE',
+            );        
 
-        try {
-            if (hive_keychain) {
-                $("#txtype").removeAttr("disabled");
-                $("#txtype").attr("checked", true);
+            try 
+            {
+                if (hive_keychain) 
+                {
+                    $("#txtype").removeAttr("disabled");
+                    $("#txtype").attr("checked", true);
+                }
             }
+            catch (e) 
+            {
+                $("#txtype").attr("disabled", true);
+                $("#txtype").removeAttr("checked");
+            }
+            $("input[name=txtype]").change();
         }
-        catch (e) {
-            $("#txtype").attr("disabled", true);
-            $("#txtype").removeAttr("checked");
+        catch (error)
+        {
+            console.log("Error at refresh() : ", error);
         }
-
-        $("input[name=txtype]").change();
     };
 
     $("#refresh").click(async function () {
@@ -438,7 +464,8 @@ $(window).bind("load", function () {
     }
 
     async function updateSwap(r) {
-        try {
+        try 
+        {
             updateMin();
             const insymbol = $("#input").val();
             var outsymbol = $("#output").val();
@@ -512,7 +539,10 @@ $(window).bind("load", function () {
                 }
             }
         } 
-        catch (e) { console.log(e); }
+        catch (error) 
+        { 
+            console.log("Error at updateSwap() : ", error); 
+        }
     }
 
     var modal = new bootstrap.Modal(document.getElementById('authqr'), {
@@ -1002,7 +1032,8 @@ $(window).bind("load", function () {
 
     const intervalBalances = async function () {
         var TIMEOUT = 1000 * 10;
-        try {
+        try 
+        {
             console.log("");
             console.warn("Here Refreshing");
             //const _await = await awaitFunction(); 
@@ -1017,7 +1048,8 @@ $(window).bind("load", function () {
             // setting timeout for 60 secs
             setTimeout(intervalBalances, 60000);
         }
-        catch (error) {
+        catch (error) 
+        {
             console.log("Error @ Refreshing : ", error);
             setTimeout(intervalBalances, 60000);
         }
@@ -1027,7 +1059,8 @@ $(window).bind("load", function () {
 
     async function setSwapAmounts() {
         var TIMEOUT = 1000 * 10;
-        try {
+        try 
+        {
             await timeout(TIMEOUT);
             console.log("Restting to Zero");
             $("#inputquantity").val("0.000");
@@ -1049,13 +1082,15 @@ $(window).bind("load", function () {
             $("#status").removeClass("text-success");
             $("#swap").attr("disabled", "true");
         }
-        catch (error) {
+        catch (error) 
+        {
             console.log("setSwapAmounts : ", error);
         }
     };
 
     async function changeMinOutput() {
-        try {
+        try 
+        {
             // Get references to the input and output elements
             const input = document.getElementById('inputquantity');
             const output = document.getElementById('outputquantity');
@@ -1134,12 +1169,11 @@ $(window).bind("load", function () {
                 slipageQty.textContent = Math.floor((calcOut) * DECIMAL) / DECIMAL;
             }; 
         }
-        catch (error) {
+        catch (error) 
+        {
             console.log("changeMinOutput : ", error);
         }
-    };
-
-    changeMinOutput();
+    };    
 
     async function calcOutput(inputVal, selectedSymbol)
     {
