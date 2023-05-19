@@ -361,11 +361,7 @@ $(window).bind("load", function () {
         closeButtonEngine.addEventListener("click", function() {
             // Hide the popup
             popupEngine.style.display = "none";
-        });
-
-        refresh();
-        getExtBridge();
-        changeMinOutput();
+        });        
     });
 
     async function getBalances(account) {
@@ -1355,6 +1351,10 @@ $(window).bind("load", function () {
             return swapHiveBalance;
         }
     }
+
+    refresh();
+    getExtBridge();
+    changeMinOutput();
 });
 
 const historyReader = async () => {
