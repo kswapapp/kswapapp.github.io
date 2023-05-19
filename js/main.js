@@ -32,7 +32,7 @@ $(window).bind("load", function () {
 		"https://api.hive-engine.com",
 		"https://api.primersion.com",
 		"https://herpc.actifit.io"
-    ];
+    ];    
     
     async function checkHiveNodeStatus(nodeUrl, statusElement) {
         try 
@@ -243,7 +243,7 @@ $(window).bind("load", function () {
         }
     };
       
-    processAPIs();
+    processAPIs();  
     
     hive.config.set('alternative_api_endpoints', rpc_nodes);
 
@@ -410,7 +410,7 @@ $(window).bind("load", function () {
         }
         catch (error)
         {
-            onsole.log("Error at getExtBridge() : ", error);
+            console.log("Error at getExtBridge() : ", error);
         }
     };   
 
@@ -473,6 +473,7 @@ $(window).bind("load", function () {
 
             var hBalance = await calcHiveAmount();
             var shBalance = await calcSwapHiveAmount();
+
             if(hBalance > 0)
             {
                 HIVEPOOL = hBalance;
@@ -645,15 +646,103 @@ $(window).bind("load", function () {
         updateSwap();
     });
 
-    let debounceTimeout;
-
+    /*
+    let debounceTimeoutKeyup;
+    
     $("#inputquantity").keyup(() => {
-        clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => {            
+        clearTimeout(debounceTimeoutKeyup);
+        debounceTimeoutKeyup = setTimeout(() => {  
+            console.log("HERE UP");           
             updateSwap();
             setOutPut();
         }, 500); // Adjust the delay duration (in milliseconds) as needed
     });
+    */
+
+    let debounceTimeoutInput;
+    let latestInputValue = null;
+
+    $("#inputquantity").on("input", () => {
+        clearTimeout(debounceTimeoutInput);
+        debounceTimeoutInput = setTimeout(() => {                    
+            updateSwap();
+            setOutPut();
+            if (latestInputValue !== null) 
+            {
+                updateSlipageQtyClick(latestInputValue);
+                updateOptionValuesClick(latestInputValue);
+            }
+        }, 500); // Adjust the delay duration (in milliseconds) as needed
+    });
+
+    $("#hive").click(async () => {   
+        latestInputValue = "HIVE";     
+        await updateInputClick("HIVE");
+    });
+
+    $("#swaphive").click(async () => { 
+        latestInputValue = "SWAP.HIVE";       
+        await updateInputClick("SWAP.HIVE");
+    });
+
+    async function updateInputClick(selectedValue) {
+        try 
+        {
+            const input = document.getElementById('inputquantity');
+            const inputElement = document.getElementById("input");
+            const feetickerElement = document.getElementById("minreceivesymbol");
+            inputElement.value = selectedValue;
+            feetickerElement.textContent = selectedValue === "HIVE" ? "SWAP.HIVE" : "HIVE"; 
+            var inputVal = parseFloat(input.value) || 0;
+    
+            latestInputValue = selectedValue;
+    
+            await updateSlipageQtyClick(inputVal);
+            await updateOptionValuesClick(selectedValue); 
+        } 
+        catch (error) 
+        {
+            console.log("Error at updateInputClick(): ", error);
+        }            
+    };
+    
+    async function updateSlipageQtyClick(inputVal) {
+        try 
+        {
+            const output = document.getElementById('outputquantity');
+            const slipageQty = document.getElementById('slipageqty');
+            const selectedRadioElement = document.querySelector('input[name="my-radio-group"]:checked');
+            const selectedRadioVal = selectedRadioElement ? parseFloat(selectedRadioElement.value) : 0;
+            const selectedSymbol = latestInputValue; // Use the latest input value        
+            let calcOut = await calcOutput(inputVal, selectedSymbol);
+            output.value = Math.floor((calcOut) * DECIMAL) / DECIMAL;
+    
+            if (selectedRadioElement) {
+                calcOut *= (1 - (selectedRadioVal / 100));
+            }                           
+            slipageQty.textContent = Math.floor((calcOut) * DECIMAL) / DECIMAL;
+        } 
+        catch (error) 
+        {
+            console.log("Error at updateSlipageQtyClick(): ", error);
+        }
+    };
+    
+    async function updateOptionValuesClick(inputSymbol) { 
+        try 
+        {                      
+            const outputElement = document.getElementById("output");
+            if (inputSymbol === 'HIVE') {
+                outputElement.value = 'SWAP.HIVE';
+            } else if (inputSymbol === 'SWAP.HIVE') {
+                outputElement.value = 'HIVE';
+            }
+        } 
+        catch (error) 
+        {
+            console.log("Error at updateOptionValuesClick(): ", error);
+        }
+    };   
 
     $("#input, #output").change(() => { updateSwap(); setOutPut(); });
 
