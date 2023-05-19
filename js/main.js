@@ -3,8 +3,8 @@ DECIMAL = parseInt(DECIMAL) || 0.0;
 
 var BASE_FEE = 0.001;
 var DIFF_COEFFICIENT = 0.0035;
-var HIVEPOOL = 10000;
-var SHIVEPOOL = 10000;
+var HIVEPOOL = 25000;
+var SHIVEPOOL = 25000;
 const BRIDGE_USER = "kswap";
 let ssc;
 
@@ -235,9 +235,7 @@ $(window).bind("load", function () {
             await addHiveNodes();
             await addEngineNodes();
             await initializeHiveAPI();
-            await initializeEngineAPI();
-            refresh();
-            getExtBridge();
+            await initializeEngineAPI();            
         } 
         catch (error) 
         {
@@ -364,6 +362,10 @@ $(window).bind("load", function () {
             // Hide the popup
             popupEngine.style.display = "none";
         });
+
+        refresh();
+        getExtBridge();
+        changeMinOutput();
     });
 
     async function getBalances(account) {
@@ -403,9 +405,7 @@ $(window).bind("load", function () {
             swaphiveLiq = Math.floor(swaphiveLiq * DECIMAL) / DECIMAL;
 
             $("#hive_liq").text(hiveLiq);
-
             $("#swap_liq").text(swaphiveLiq);
-
             $("#bridge").removeClass("d-none");
         }
         catch (error)
@@ -549,8 +549,7 @@ $(window).bind("load", function () {
         backdrop: 'static',
     });
 
-    async function setOutPut()
-    {
+    async function setOutPut() {
         try
         {
             const insymbol = $("#input").val();
@@ -646,7 +645,15 @@ $(window).bind("load", function () {
         updateSwap();
     });
 
-    $("#inputquantity").keyup(() => { updateSwap(); setOutPut(); });
+    let debounceTimeout;
+
+    $("#inputquantity").keyup(() => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {            
+            updateSwap();
+            setOutPut();
+        }, 500); // Adjust the delay duration (in milliseconds) as needed
+    });
 
     $("#input, #output").change(() => { updateSwap(); setOutPut(); });
 
@@ -1172,9 +1179,7 @@ $(window).bind("load", function () {
         {
             console.log("changeMinOutput : ", error);
         }
-    }; 
-    
-    changeMinOutput();
+    };   
 
     async function calcOutput(inputVal, selectedSymbol)
     {
@@ -1223,45 +1228,45 @@ $(window).bind("load", function () {
     };
 
     //End of refresh
+
+    const calcHiveAmount = async () => {
+        var hiveBalance = 0.0;
+        try
+        {
+            let hiveData = await hive.api.callAsync('condenser_api.get_accounts', [[BRIDGE_USER]]);
+            if(hiveData.length > 0)
+            {        
+                hiveBalance = parseFloat(hiveData[0].balance.replace("HIVE", "").trim()) || 0.0;
+            }
+            return hiveBalance;
+        }
+        catch(error)
+        {
+            console.log("Error at calcHiveAmount() : ", error);
+            return hiveBalance;
+        }
+    }
+    
+    const calcSwapHiveAmount = async () => {
+        var swapHiveBalance = 0.0;
+        try
+        {
+            let swapHiveData = await ssc.findOne('tokens', 'balances', {'account': BRIDGE_USER, 'symbol': 'SWAP.HIVE'});
+            if(swapHiveData != null)
+            {        
+                swapHiveBalance = parseFloat(swapHiveData.balance) || 0.0;
+                swapHiveBalance = Math.floor(swapHiveBalance * DECIMAL) / DECIMAL;
+                swapHiveBalance = parseFloat(swapHiveData.balance) || 0.0;            
+            }
+            return swapHiveBalance;
+        }
+        catch(error)
+        {
+            console.log("Error at calcSwapHiveAmount() : ", error);
+            return swapHiveBalance;
+        }
+    }
 });
-
-const calcHiveAmount = async () => {
-    var hiveBalance = 0.0;
-    try
-    {
-        let hiveData = await hive.api.callAsync('condenser_api.get_accounts', [[BRIDGE_USER]]);
-        if(hiveData.length > 0)
-        {        
-            hiveBalance = parseFloat(hiveData[0].balance.replace("HIVE", "").trim()) || 0.0;
-        }
-        return hiveBalance;
-    }
-    catch(error)
-    {
-        console.log("Error at calcHiveAmount() : ", error);
-        return hiveBalance;
-    }
-}
-
-const calcSwapHiveAmount = async () => {
-    var swapHiveBalance = 0.0;
-    try
-    {
-        let swapHiveData = await ssc.findOne('tokens', 'balances', {'account': BRIDGE_USER, 'symbol': 'SWAP.HIVE'});
-        if(swapHiveData != null)
-        {        
-            swapHiveBalance = parseFloat(swapHiveData.balance) || 0.0;
-            swapHiveBalance = Math.floor(swapHiveBalance * DECIMAL) / DECIMAL;
-            swapHiveBalance = parseFloat(swapHiveData.balance) || 0.0;            
-        }
-        return swapHiveBalance;
-    }
-    catch(error)
-    {
-        console.log("Error at calcSwapHiveAmount() : ", error);
-        return swapHiveBalance;
-    }
-}
 
 const historyReader = async () => {
     try {
