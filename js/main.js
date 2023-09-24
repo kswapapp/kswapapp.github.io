@@ -2,6 +2,7 @@ var DECIMAL = 1000;
 DECIMAL = parseInt(DECIMAL) || 0.0;
 
 var BASE_FEE = 0.001;
+var MIN_BASE_FEE = 0.0;
 var DIFF_COEFFICIENT = 0.005;
 var HIVEPOOL = 25000;
 var SHIVEPOOL = 25000;
@@ -661,7 +662,7 @@ $(window).bind("load", function () {
             if(insymbol == "HIVE")
             {
                 var diff = ((inputVal * 0.5 + HIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                 var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                 expResult = (inputVal * price) * (1 - adjusted_base_fee);
                 expResult = Math.floor(expResult * DECIMAL) / DECIMAL;                
@@ -669,7 +670,7 @@ $(window).bind("load", function () {
             if(insymbol == "SWAP.HIVE")
             {
                 var diff = ((inputVal * 0.5 + SHIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                 var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                 expResult = (inputVal * price) * (1 - adjusted_base_fee);
                 expResult = Math.floor(expResult * DECIMAL) / DECIMAL;
@@ -755,7 +756,7 @@ $(window).bind("load", function () {
                 if(insymbol == "HIVE")
                 {
                     var diff = ((inputVal * 0.5 + HIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                     var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                     expResult = (inputVal * price) * (1 - adjusted_base_fee);
                     expResult = Math.floor(expResult * DECIMAL) / DECIMAL;
@@ -763,7 +764,7 @@ $(window).bind("load", function () {
                 if(insymbol == "SWAP.HIVE")
                 {
                     var diff = ((inputVal * 0.5 + SHIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                     var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                     expResult = (inputVal * price) * (1 - adjusted_base_fee);
                     expResult = Math.floor(expResult * DECIMAL) / DECIMAL; 
@@ -1472,7 +1473,7 @@ $(window).bind("load", function () {
                 if(selectedSymbol == "HIVE")
                 {
                     var diff = ((inputVal * 0.5 + HIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                     var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                     expResult = (inputVal * price) * (1 - adjusted_base_fee);
                     expResult = Math.floor(expResult * DECIMAL) / DECIMAL;
@@ -1480,7 +1481,7 @@ $(window).bind("load", function () {
                 if(selectedSymbol == "SWAP.HIVE")
                 {
                     var diff = ((inputVal * 0.5 + SHIVEPOOL) / (SHIVEPOOL + HIVEPOOL)) - 0.5;
-                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), 0 );
+                    var adjusted_base_fee = Math.max( BASE_FEE * (1 - 2 * Math.abs(diff)), MIN_BASE_FEE );
                     var price = 1 - (2 * diff * DIFF_COEFFICIENT);
                     expResult = (inputVal * price) * (1 - adjusted_base_fee);
                     expResult = Math.floor(expResult * DECIMAL) / DECIMAL; 
