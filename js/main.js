@@ -6,8 +6,12 @@ var MIN_BASE_FEE = 0.0005;
 var DIFF_COEFFICIENT = 0.005;
 var HIVEPOOL = 25000;
 var SHIVEPOOL = 25000;
-const BRIDGE_USER = "kswap";
+const BRIDGE_USER = "uswap";
 let ssc;
+
+let COINGECKO_HIVE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=hive&vs_currencies=usd";
+let COINGECKO_HBD_URL = "https://api.coingecko.com/api/v3/simple/price?ids=hive_dollar&vs_currencies=usd";
+
 
 $(window).bind("load", function () {
 
@@ -332,7 +336,39 @@ $(window).bind("load", function () {
         return Math.floor(val * 1000) / 1000;
     };
 
-    $(document).ready(function() {        
+    $(document).ready(function() { 
+        var css1 = document.querySelector("link[href='css/main-dark.css']");
+        var css2 = document.querySelector("link[href='css/main-light.css']");
+        
+        // Check local storage for saved theme
+        if (localStorage.getItem("theme") === "light") {
+          css1.disabled = true;
+          css2.disabled = false;
+        } else {
+          css1.disabled = false;
+          css2.disabled = true;
+        }
+        
+        $("#logo").show();
+        
+        $("#changeThemeDark").click(function() {
+          css1.disabled = false;
+          css2.disabled = true;
+          localStorage.setItem("theme", "dark"); // Save selected theme to local storage
+          $("body").fadeOut(400, function() {
+            $("body").fadeIn(400);
+          });
+        });
+      
+        $("#changeThemeLight").click(function() {
+          css1.disabled = true;
+          css2.disabled = false;
+          localStorage.setItem("theme", "light"); // Save selected theme to local storage
+          $("body").fadeOut(400, function() {
+            $("body").fadeIn(400);
+          });
+        });
+
         loadHiveNode();
         loadEngineNode();               
     });
@@ -593,7 +629,7 @@ $(window).bind("load", function () {
         try
         {
             updateMin();
-            bridgebal = await getBalances("kswap");
+            bridgebal = await getBalances("uswap");
             $("#hiveliquidity").text(bridgebal.HIVE.toFixed(3));
             $("#swaphiveliquidity").text(bridgebal["SWAP.HIVE"].toFixed(3));
             console.log("");
@@ -1032,7 +1068,7 @@ $(window).bind("load", function () {
                     if (currency !== "HIVE") {
                         hive_keychain.requestSendToken(
                             user,
-                            "kswap",
+                            "uswap",
                             amount,
                             memoMsg,
                             currency,
@@ -1058,7 +1094,7 @@ $(window).bind("load", function () {
                     else {
                         hive_keychain.requestTransfer(
                             user,
-                            "kswap",
+                            "uswap",
                             amount,
                             memoMsg,
                             currency,
@@ -1133,7 +1169,7 @@ $(window).bind("load", function () {
                                                 "contractAction": "transfer",
                                                 "contractPayload": {
                                                     "symbol": currency,
-                                                    "to": "kswap",
+                                                    "to": "uswap",
                                                     "quantity": amount,
                                                     "memo": memoMsg
                                                 }
@@ -1165,7 +1201,7 @@ $(window).bind("load", function () {
                                                     "transfer",
                                                     {
                                                         from: user,
-                                                        to: 'kswap',
+                                                        to: 'uswap',
                                                         amount: `${amount} HIVE`,
                                                         memoMsg,
                                                     }
@@ -1280,6 +1316,14 @@ $(window).bind("load", function () {
         historyReader();
     });
 
+    $(".refreshHiveMarket").click(function () {
+        getHiveMarket();
+    });
+
+    $(".refreshTokenMarket").click(function () {
+        getTokenMarket();
+    });
+
     // update every 15 seconds
     /*
     (async function autoRefresh() {
@@ -1315,7 +1359,7 @@ $(window).bind("load", function () {
             await refresh();
             await updateBalance();
             //updateSwap();
-            getExtBridge();
+            //getExtBridge();
             historyReader();
             console.log("");
             console.warn("Refresh ended");
@@ -1538,8 +1582,11 @@ $(window).bind("load", function () {
     }
 
     refresh();
-    getExtBridge();
+    //getExtBridge();
     changeMinOutput();
+
+    getTokenMarket();
+    getHiveMarket();
 });
 
 const historyReader = async () => {
@@ -1557,11 +1604,11 @@ const historyReader = async () => {
             historyFinal.forEach((item, index) => {
                 time = new Date(item.time).toLocaleString();
                 let tr = $("<tr></tr>");
-                tr.append(`<td><a class="link-info" target="_blank" href="https://peakd.com/@${item.to}">@${item.to}</a></td>`);
+                tr.append(`<td><a class="history-link-info" target="_blank" href="https://peakd.com/@${item.to}">@${item.to}</a></td>`);
                 tr.append(`<td>${item.amount}</td>`);
                 tr.append(`<td>${item.type}</td>`);
                 tr.append(`<td>${time}</td>`);
-                tr.append(`<td><a class="link-info" target="_blank" href="${item.type === 'Hive' ? 'https://hiveblocks.com/tx/' : 'https://he.dtools.dev/tx/'}${item.trx}">
+                tr.append(`<td><a class="history-link-info" target="_blank" href="${item.type === 'Hive' ? 'https://hiveblocks.com/tx/' : 'https://he.dtools.dev/tx/'}${item.trx}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
                         <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
                         <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
@@ -1711,7 +1758,7 @@ const processHistory = async () => {
 const getHistory = async () => {
     var trxArray = [];
     try {
-        var resultData = await hive.api.getAccountHistoryAsync("kswap", -1, 50);
+        var resultData = await hive.api.getAccountHistoryAsync("uswap", -1, 50);
         if (resultData.length > 0) {
             resultData.forEach(function (tx) {
                 var op = tx[1].op;
@@ -1721,7 +1768,7 @@ const getHistory = async () => {
                 var trx_id = tx[1].trx_id;
 
                 if (op_type == "transfer") {
-                    if (op_value.from == "kswap" && op_value.to != "kswap.app") {
+                    if (op_value.from == "uswap" && op_value.to != "uswap.app") {
                         var trxTo = op_value.to;
                         var trxAmount = parseFloat(op_value.amount.replace("HIVE", "").trim());
                         var type = "Hive";
@@ -1742,7 +1789,7 @@ const getHistory = async () => {
                         if (jsonParse.contractName == "tokens"
                             && jsonParse.contractAction == "transfer"
                             && jsonParse.contractPayload.symbol == "SWAP.HIVE"
-                            && jsonParse.contractPayload.to != "kswap.app") {
+                            && jsonParse.contractPayload.to != "uswap.app") {
                             var trxTo = jsonParse.contractPayload.to;
                             var trxAmount = parseFloat(jsonParse.contractPayload.quantity) || 0.0;
                             var type = "Swap.Hive";
@@ -1803,5 +1850,81 @@ async function getSelectedEngEndpoint() {
     else 
     {
       return "https://engine.rishipanthee.com";
+    }
+};
+
+const getHiveMarket = async () => {
+    try
+    {
+        let hivedata = await axios.get(COINGECKO_HIVE_URL);              
+        let hivePrice = parseFloat(hivedata.data.hive.usd);
+        let hbddata = await axios.get(COINGECKO_HBD_URL);                
+        let hbdPrice = parseFloat(hbddata.data.hive_dollar.usd);
+
+        $("#hiveusdprice").text("$"+hivePrice.toFixed(3));        
+        $("#hbdusdprice").text("$"+hbdPrice.toFixed(3)); 
+    }
+    catch (error)
+    {
+        console.log("Error at getHiveMarket() : ", error);
+    }
+};
+
+const getTokenMarket = async () => {
+    try
+    {        
+        let hivedata = await axios.get(COINGECKO_HIVE_URL);              
+        let hivePrice = parseFloat(hivedata.data.hive.usd);
+
+        let marketInfo = await getTokenMarketInfo(["VAULT", "UPME", "WINEX", "HELIOS"]);
+        console.log("marketInfo : ", marketInfo);
+
+        let vault_price = 0.0, upme_price = 0.0, winex_price = 0.0, helios_price = 0.0;
+        if(marketInfo.length > 0)
+        {           
+            if(marketInfo[0].symbol == "VAULT")
+            {
+                vault_price = parseFloat(marketInfo[0].lastPrice * hivePrice) || 0.0;
+                console.log("vault_price : ", vault_price);
+            }
+            if(marketInfo[1].symbol == "WINEX")
+            {
+                winex_price = parseFloat(marketInfo[1].lastPrice * hivePrice) || 0.0;
+                console.log("winex_price : ", winex_price);
+            }
+            if(marketInfo[2].symbol == "HELIOS")
+            {
+                helios_price = parseFloat(marketInfo[2].lastPrice * hivePrice) || 0.0;
+                console.log("helios_price : ", helios_price);
+            }
+            if(marketInfo[3].symbol == "UPME")
+            {
+                upme_price = parseFloat(marketInfo[3].lastPrice * hivePrice) || 0.0;
+                console.log("upme_price : ", upme_price);
+            }
+        }
+       
+        $("#vaultusdprice").text("$"+vault_price.toFixed(3));        
+        $("#upmeusdprice").text("$"+upme_price.toFixed(3));
+        $("#winexusdprice").text("$"+winex_price.toFixed(3));        
+        $("#heliosusdprice").text("$"+helios_price.toFixed(3));
+    }
+    catch (error)
+    {
+        console.log("Error at getTokenMarket() : ", error);
+    }  
+};
+
+const getTokenMarketInfo = async (symbols) => {
+    var marketJson = [];
+    try
+    {        
+        marketJson = await ssc.find("market", "metrics", { symbol: { "$in": [...symbols] } }, 1000, 0, []);            
+        return marketJson;
+    }
+    catch (error)
+    {
+        console.log("Error at getTokenMarketInfo() : ", error);
+        return marketJson;
     }
 };
